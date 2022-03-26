@@ -231,6 +231,7 @@ class Parser1(Parser0):
         This setting applies per scope.
         """
         return self._stack[-1][2]._pscript_overload
+
     
     ## Literals
     
@@ -341,6 +342,8 @@ class Parser1(Parser0):
         name = node.name
         if name in reserved_names:
             raise JSError('Cannot use reserved name %s as a variable name!' % name)
+
+        self.last_var=node.name
         if self.vars.is_known(name):
             return self.with_prefix(name)
         if self._scope_prefix:
@@ -410,6 +413,7 @@ class Parser1(Parser0):
             return ["Math.floor(", left, "/", right, ")"]
         
         op = ' %s ' % self.BINARY_OP[node.op]
+
         return [left, op, right]
     
     def _format_string(self, node):
@@ -505,7 +509,21 @@ class Parser1(Parser0):
     def parse_Call(self, node):
         
         # Get full function name and method name if it exists
-        
+
+        if "name" in node.func_node._todict():    
+            if node.func_node._todict()["name"]=="require":
+                self.remove_declarations.append(self.last_var)
+              
+        """
+        if node.func_node._todict()["name"]=="require":
+            print(node.func_node.name)
+        """
+
+        """
+        if node.name=="require":
+            pass
+        """
+
         if isinstance(node.func_node, ast.Attribute):
             # We dont want to parse twice, because it may add to the vars_unknown
             method_name = node.func_node.attr
@@ -721,7 +739,9 @@ class Parser1(Parser0):
         
         # Parse targets
         tuple = []
+ 
         for target in node.target_nodes:
+
             var = ''.join(self.parse(target))
             if isinstance(target, ast.Name):
                 if '.' in var:
@@ -740,6 +760,8 @@ class Parser1(Parser0):
             else:
                 raise JSError("Unsupported assignment type")
             code.append(' = ')
+
+        
         
         # Parse right side
         if isinstance(node.value_node, ast.ListComp) and len(node.target_nodes) == 1:
@@ -758,8 +780,9 @@ class Parser1(Parser0):
                 var = unify(self.parse(x))
                 if isinstance(x, ast.Name):  # but not when attr or index
                     self.vars.add(var)
+
                 code.append('%s = %s[%i];' % (var, dummy, i))
-        
+       
         return code
     
     def parse_AugAssign(self, node):  # -> x += 1

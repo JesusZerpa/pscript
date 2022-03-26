@@ -226,6 +226,8 @@ class Parser0:
         # To help distinguish classes from functions
         self._seen_func_names = set()
         self._seen_class_names = set()
+        self.last_var=None
+        self.remove_declarations=[]
         
         # Options
         self._docstrings = bool(docstrings)  # whether to inclue docstrings
@@ -246,6 +248,7 @@ class Parser0:
         # Parse
         try:
             self._parts = self.parse(self._root)
+
         except JSError as err:
             # Give smarter error message
             _, _, tb = sys.exc_info()
@@ -337,11 +340,13 @@ class Parser0:
         code = []
         loose_vars = []
         for name, value in sorted(ns.items()):
-            if value == 1:
+            if value == 1 and name not in self.remove_declarations:
                 loose_vars.append(name)
             # else: pass global/nonlocal or expected to be defined in outer scope
         if loose_vars:
             code.insert(0, self.lf('var %s;' % ', '.join(loose_vars)))
+        
+
         return ''.join(code)
     
     def with_prefix(self, name, new=False):
@@ -429,6 +434,7 @@ class Parser0:
         Returns a list of strings.
         """
         nodeType = node.__class__.__name__
+        
         parse_func = getattr(self, 'parse_' + nodeType, None)
         if parse_func:
             res = parse_func(node)
