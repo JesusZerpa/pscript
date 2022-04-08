@@ -253,7 +253,14 @@ class TestConrolFlow:
         code = 't0 = perf_counter()\nfor i in range(100000): a = [j for j in range(10)]\n\nperf_counter()-t0'
         t1 = evalpy(code)
         print(t1)
-
+    def test_decorator(self):
+        evalpy(
+"""
+@jsevent(window.addEventListener)
+def click():
+    console.log('aaaaaaaaaaaaa')
+""")
+        assert True
 
 class TestExceptions:
     

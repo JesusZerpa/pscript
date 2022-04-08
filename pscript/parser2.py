@@ -828,6 +828,8 @@ class Parser2(Parser1):
         
         has_self = node.arg_nodes and node.arg_nodes[0].name in ('self', 'this')
         
+        decorators=[]#guardara los decoradores que seran agregados a la funcion
+
         # Bind if this function is inside a function, and does not have self
         binder = ''  # code to add to the end
         if len(self._stack) >= 1 and self._stack[-1][0] == 'function':
@@ -866,12 +868,8 @@ class Parser2(Parser1):
         if argnames:
             code.pop(-1)  # pop last comma
         
-        # Check
-        if (not lambda_) and node.decorator_nodes:
-            if not (len(node.decorator_nodes) == 1 and
-                    isinstance(node.decorator_nodes[0], ast.Name) and
-                    node.decorator_nodes[0].name == 'staticmethod'):
-                raise JSError('No support for function decorators')
+        
+  
         
         # Prepare for content
         code.append(') {')
@@ -951,6 +949,7 @@ class Parser2(Parser1):
                 code.append(self.lf(vararg_code2))
             self._indent -= 1
             code.append(self.lf('}'))
+            
             if vararg_code1:
                 code += [' else {', vararg_code1, '}']
             # Apply values of keyword-only args
@@ -1013,7 +1012,35 @@ class Parser2(Parser1):
         
         self._indent -= 1
         if not lambda_:
+            ###
             code.append(self.lf('}%s;\n' % binder))
+        
+        # Check
+        if (not lambda_) and node.decorator_nodes:
+            code.append(self.lf('%s = ' % prefixed))
+
+            if not (len(node.decorator_nodes) == 1 and
+                    isinstance(node.decorator_nodes[0], ast.Name) and
+                    node.decorator_nodes[0].name == 'staticmethod'):
+                #raise JSError('No support for function decorators')
+            
+                if type(node.decorator_nodes[0])==ast.Call:
+                    params=[]
+                    for param in node.decorator_nodes[0].arg_nodes:
+                        if type(param)==ast.Attribute:
+                            params.append(param.value_node.name+"."+param.attr)
+
+                    args=node.decorator_nodes[0]
+                    code.append(node.decorator_nodes[0].func_node.name\
+                        +"("+",".join(params)+")("+prefixed+")")
+                else:
+                    code.append(node.decorator_nodes[0].func_node.name\
+                        +"("+prefixed+")")
+                    
+                
+            
+                pass
+
         return pre_code + code
     
     def parse_Lambda(self, node):

@@ -17,7 +17,8 @@ class JSString(str):
     """
     pass
 
-
+def jsevent(params):
+    return lambda fn:fn(params)
 def py2js(ob=None, new_name=None, **parser_options):
     """ Convert Python to JavaScript.
     
@@ -57,6 +58,7 @@ def py2js(ob=None, new_name=None, **parser_options):
     """
     
     def py2js_(ob):
+
         if isinstance(ob, str):
             thetype = 'str'
             pycode = ob
@@ -255,13 +257,14 @@ def evaljs(jscode, whitespace=True, print_result=True, extra_nodejs_args=None):
     Returns:
         str: the last result as a string.
     """
-    global _eval_count
+    global _eval_count,jsevent
     
     # Init command
     cmd = [get_node_exe()]
     if extra_nodejs_args:
         cmd.extend(extra_nodejs_args)
     
+
     # Prepare command
     if len(jscode) > 2**14:
         if print_result:
@@ -278,12 +281,13 @@ def evaljs(jscode, whitespace=True, print_result=True, extra_nodejs_args=None):
     else:
         filename = None
         p_or_e = ['-p', '-e'] if print_result else ['-e']
-        cmd += ['--use_strict'] + p_or_e + [jscode]
+        cmd += ['--use_strict'] + p_or_e + ["let window={addEventListener:()=>{}};function jsevent(params){return function(fn){window.addEventListener(params,fn)}}\n"+jscode]
         if sys.version_info[0] < 3:
             cmd = [c.encode('raw_unicode_escape') for c in cmd]
     
     # Call node
     try:
+     
         res = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
     except Exception as err:
         if hasattr(err, 'output'):

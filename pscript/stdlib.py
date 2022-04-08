@@ -964,6 +964,10 @@ METHODS['zfill'] = """function (width) { // nargs: 1
     return METHOD_PREFIXrjust(this, width, '0');
 }"""
 
+METHODS['jsevent'] = """function (params) { // nargs: 1
+    return function(fn){window.addEventListener(params,fn)}
+}"""
+
 
 for key in METHODS:
     METHODS[key] = re.subn(r'METHOD_PREFIX(.+?)\(',
