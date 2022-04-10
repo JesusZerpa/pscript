@@ -129,6 +129,38 @@ def py2js(ob=None, new_name=None, **parser_options):
         # use use py2js everywhere where we now use Parser and move its docs here.
         
         # Wrap in JSString
+        import re
+        r"""
+         re.sub(pattern,"class \g<variable>: pass","Hola.otra cosa")
+         'class Hola: pass'
+
+        """
+        
+
+        jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
+            r"import { \g<module> as \g<variable> } from '\g<path>'",
+            jscode)
+
+        
+       
+        
+        
+        
+        param=r"[\w|\d|\.|\'|,|\[|\]|\{|\}|:|\"|/|+|_|\s]+"
+        
+        jscode=re.sub(rf"(?P<variable>[\w|,|\.|\s]+)\s+?=\s+?new \(require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
+            r"\nimport { \g<module> } from '\g<path>';\g<variable> = \g<module>(\g<params>)",
+            jscode)
+        jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\)",
+            r"\nimport  * as \g<variable>  from '\g<path>'",
+            jscode)
+        
+        jscode=re.sub(rf"os.environ\[[\"|'](?P<variable>\w+)[\"|']\]",
+            r"import.meta.env.\g<variable>",
+            jscode)
+        with open(f"_prueba_{filename}.js","w") as f:
+            f.write(jscode)
+
         jscode = JSString(jscode)
         jscode.meta = {}
         jscode.meta['filename'] = filename
