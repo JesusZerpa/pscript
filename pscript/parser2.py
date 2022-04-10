@@ -1023,12 +1023,19 @@ class Parser2(Parser1):
                     isinstance(node.decorator_nodes[0], ast.Name) and
                     node.decorator_nodes[0].name == 'staticmethod'):
                 #raise JSError('No support for function decorators')
-            
+                
                 if type(node.decorator_nodes[0])==ast.Call:
                     params=[]
-                    for param in node.decorator_nodes[0].arg_nodes:
-                        if type(param)==ast.Attribute:
-                            params.append(param.value_node.name+"."+param.attr)
+                    for _node in node.decorator_nodes:
+                        for param in _node.arg_nodes:
+
+                            if type(param)==ast.Attribute:
+                                params.append(param.value_node.name+"."+param.attr)
+                            elif type(param)==ast.Str:
+                                
+                                params.append("'"+param.value+"'")
+                            elif type(param)==ast.Name:
+                                params.append(param.name)
 
                     args=node.decorator_nodes[0]
                     code.append(node.decorator_nodes[0].func_node.name\

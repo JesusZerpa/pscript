@@ -158,9 +158,44 @@ def py2js(ob=None, new_name=None, **parser_options):
         jscode=re.sub(rf"os.environ\[[\"|'](?P<variable>\w+)[\"|']\]",
             r"import.meta.env.\g<variable>",
             jscode)
-        with open(f"_prueba_{filename}.js","w") as f:
-            f.write(jscode)
+        
+        _jsevent="""
+            function jsevent(listener){
+                return function(fn){
+                
+                if (fn.name.indexOf("bound flx_")>-1){
+                    listener(fn.name.slice("bound flx_".length),fn)
+                }
+                else if (fn.name.indexOf("flx_")>-1){
 
+                    listener(fn.name.slice("flx_".length),fn)
+                }
+                else{
+                    listener(fn.name,fn)
+                }
+                
+                return fn
+                }
+            }
+
+            function jsbind(obj,attr){
+                console.log("qqqqqq",obj,attr)
+                return function(fn){
+                    if (fn.name.indexOf("flx_")>-1){
+                        console.log("aaaaaaaa",obj,attr)
+                        console.log("iiiiiiii",obj[attr])
+                        obj[attr]( fn.name.slice("flx_".length),fn)
+                    }
+                    else{
+                        obj[attr]( fn.name,fn)
+                    }
+                    
+                }
+            }
+            """
+
+        jscode=_jsevent+jscode
+        
         jscode = JSString(jscode)
         jscode.meta = {}
         jscode.meta['filename'] = filename
