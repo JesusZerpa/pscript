@@ -137,7 +137,7 @@ def py2js(ob=None, new_name=None, **parser_options):
         """
         
 
-        jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
+        jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
             r"import { \g<module> as \g<variable> } from '\g<path>'",
             jscode)
 
@@ -146,27 +146,36 @@ def py2js(ob=None, new_name=None, **parser_options):
         
         
         
-        param=r"[\w|\d|\.|\'|,|\[|\]|\{|\}|:|\"|/|+|_|\s]+"
+        param=r"[@|\w|\d|\.|\'|,|\[|\]|\{|\}|:|\"|/|+|_|\s]+"
         
-        jscode=re.sub(rf"(?P<variable>[\w|,|\.|\s]+)\s+?=\s+?new \(require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
+        
+
+        jscode=re.sub(rf"(?P<variable>[\w|,|\.|\s]+)\s+?=\s+?new \(require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
             r"\nimport { \g<module> } from '\g<path>';\g<variable> = \g<module>(\g<params>)",
             jscode)
-        jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[\w|\d|\.|\-|\/]+)\"\)",
+
+        jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
             r"\nimport  * as \g<variable>  from '\g<path>'",
             jscode)
+
+
         
         jscode=re.sub(rf"os.environ\[[\"|'](?P<variable>\w+)[\"|']\]",
             r"import.meta.env.\g<variable>",
             jscode)
+        jscode=re.sub(rf"\(require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
+            r"\nimport { \g<module> } from '\g<path>';\g<module>(\g<params>)",
+            jscode)
         
         _jsevent="""
+           
             function jsevent(listener){
                 return function(fn){
                 
-                if (fn.name.indexOf("bound flx_")>-1){
+                if (fn.name.indexOf("bound flx_")==0){
                     listener(fn.name.slice("bound flx_".length),fn)
                 }
-                else if (fn.name.indexOf("flx_")>-1){
+                else if (fn.name.indexOf("flx_")==0){
 
                     listener(fn.name.slice("flx_".length),fn)
                 }
@@ -181,10 +190,12 @@ def py2js(ob=None, new_name=None, **parser_options):
             function jsbind(obj,attr){
                 console.log("qqqqqq",obj,attr)
                 return function(fn){
-                    if (fn.name.indexOf("flx_")>-1){
-                        console.log("aaaaaaaa",obj,attr)
-                        console.log("iiiiiiii",obj[attr])
+                    if (fn.name.indexOf("flx_")==0){
+                        
                         obj[attr]( fn.name.slice("flx_".length),fn)
+                    }
+                    else if (fn.name.indexOf("bound flx_")==0){
+                        obj[fn.name.slice("bound flx_".length)]=fn
                     }
                     else{
                         obj[attr]( fn.name,fn)
@@ -192,9 +203,24 @@ def py2js(ob=None, new_name=None, **parser_options):
                     
                 }
             }
+            function jsassign(obj){
+        
+                return function(fn){
+             
+                    if (fn.name.indexOf("bound flx_")==0){
+                        obj[fn.name.slice("bound flx_".length)]=fn
+                    }
+                    else if (fn.name.indexOf("flx_")==0){
+                        obj[fn.name.slice("flx_".length)]=fn
+                    }
+                    else{
+                        obj[fn.name]=fn
+                    }
+                }
+            }
             """
 
-        jscode=_jsevent+jscode
+        jscode=_jsevent+jscode.replace("jsimport(","import(")
         
         jscode = JSString(jscode)
         jscode.meta = {}
