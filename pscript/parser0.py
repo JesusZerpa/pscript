@@ -202,6 +202,7 @@ class Parser0:
                  inline_stdlib=True):
         self._pycode = code  # helpfull during debugging
         self._pysource = None
+        self.import_vars=[]
         if isinstance(pysource, str):
             self._pysource = pysource, 0
         elif isinstance(pysource, tuple):
@@ -277,6 +278,8 @@ class Parser0:
         # Post-process
         if self._parts:
             self._parts[0] = '    ' * indent + self._parts[0].lstrip()
+        
+       
     
     def dump(self):
         """ Get the JS code as a string.
@@ -444,6 +447,11 @@ class Parser0:
                 res = list(res)
             if not isinstance(res, list):
                 res = [res]
+       
+            
+            
+            
+    
             return res
         else:
             raise JSError('Cannot parse %s-nodes yet' % nodeType)

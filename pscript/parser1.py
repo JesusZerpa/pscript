@@ -340,7 +340,7 @@ class Parser1(Parser0):
     def parse_Name(self, node, fullname=None):
         # node.ctx can be Load, Store, Del -> can be of use somewhere?
         name = node.name
-        if name in reserved_names:
+        if name in reserved_names and name!="typeof":
             raise JSError('Cannot use reserved name %s as a variable name!' % name)
 
         self.last_var=node.name
@@ -863,7 +863,7 @@ class Parser1(Parser0):
     ## Imports 
 
     def parse_Import(self, node):
-        
+        import os
         if node.root and 'pscript' in node.root:
             # User is probably importing names from here to allow
             # writing the JS code and command to parse it in one module.
@@ -876,7 +876,45 @@ class Parser1(Parser0):
         if node.root == 'typing':
             # User is probably importing type annotations. Ignore this import.
             return []
-        raise JSError('PScript does not support imports.')
+        
+        if node.level!=0:
+            path="./"+("../"*(node.level-1))+node.root.replace(".","/")
+            fullpath=os.path.dirname(self._pysource[0])+"/"+ ("../"*(node.level-1))+node.root.replace(".","/")
+
+        else:
+            path="@/"+node.root.replace(".","/")
+            fullpath=os.getcwd()+"/"+node.root.replace(".","/")
+        
+        for item in node.names:
+            if item[0]!="*":
+                self.import_vars.append(item[0])
+        default=False
+        if os.path.isdir(fullpath) and os.path.exists(fullpath+"/__init__.py"):
+            path+="/__init__.py"
+        elif os.path.exists(fullpath+".py"):
+            path+=".py" 
+        elif os.path.exists(fullpath+".js"):
+            path+=".js"
+        elif os.path.isdir(fullpath) and self.import_vars:
+
+            if os.path.exists(fullpath+"/"+self.import_vars[0]+".js"):
+                default=True
+                path+="/"+self.import_vars[0]+".js"
+          
+
+            
+        if not default:
+            if "*" in ",".join([item[0] for item in node.names]):
+                code=["\n","import  '"+path+"'","\n"]
+            else:  
+                code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path+"'","\n"]
+        else:
+
+            code=["\nimport * as "+node.names[0][0]+" from '"+path+"'","\n"]
+      
+        
+        return code
+        #raise JSError('PScript does not support imports.')
     
     def parse_Module(self, node):
         # Module level. Every piece of code has a module as the root.

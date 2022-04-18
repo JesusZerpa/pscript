@@ -101,14 +101,17 @@ def py2js(ob=None, new_name=None, **parser_options):
         else:
             raise ValueError('py2js() only accepts non-builtin modules, '
                              'classes and functions.')
-        
+        if "filename" in parser_options:
+            filename=parser_options.pop("filename")
+
         # Get hash, in case we ever want to cache JS accross sessions
         h = hashlib.sha256('pscript version 1'.encode())
         h.update(pycode.encode())
         hash = h.digest()
-        
+   
         # Get JS code
         if filename:
+
             p = Parser(pycode, (filename, linenr), **parser_options)
         else:
             p = Parser(pycode, **parser_options)
@@ -136,9 +139,10 @@ def py2js(ob=None, new_name=None, **parser_options):
 
         """
         
+        
 
         jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
-            r"import { \g<module> as \g<variable> } from '\g<path>'",
+            r"import { \g<module> as \g<variable> } from '\g<path>'/*aqui*/",
             jscode)
 
         
@@ -168,19 +172,33 @@ def py2js(ob=None, new_name=None, **parser_options):
             jscode)
         
         _jsevent="""
-           
-            function jsevent(listener){
+            
+
+            function Array_from(array){
+                return Array.from(array)
+            }
+            function jscall(listener,params){
+                return function(fn){
+                    
+                    listener(params,fn)
+                }
+            }
+            function __new__(obj){
+                return new obj
+            }
+
+            function jsevent(listener,params=null){
                 return function(fn){
                 
                 if (fn.name.indexOf("bound flx_")==0){
-                    listener(fn.name.slice("bound flx_".length),fn)
+                               listener(fn.name.slice("bound flx_".length),fn,params)
                 }
                 else if (fn.name.indexOf("flx_")==0){
 
-                    listener(fn.name.slice("flx_".length),fn)
+                    listener(fn.name.slice("flx_".length),fn,params)
                 }
                 else{
-                    listener(fn.name,fn)
+                    listener(fn.name,fn,params)
                 }
                 
                 return fn
@@ -204,9 +222,9 @@ def py2js(ob=None, new_name=None, **parser_options):
                 }
             }
             function jsassign(obj){
-        
                 return function(fn){
-             
+               
+
                     if (fn.name.indexOf("bound flx_")==0){
                         obj[fn.name.slice("bound flx_".length)]=fn
                     }
@@ -221,7 +239,8 @@ def py2js(ob=None, new_name=None, **parser_options):
             """
 
         jscode=_jsevent+jscode.replace("jsimport(","import(")
-        
+        jscode+="\nexport {"+", ".join(p.vars.get_defined().union(set(p.import_vars)))+" }"
+
         jscode = JSString(jscode)
         jscode.meta = {}
         jscode.meta['filename'] = filename
@@ -233,6 +252,8 @@ def py2js(ob=None, new_name=None, **parser_options):
         jscode.meta['vars_defined'] = p.vars.get_defined()
         jscode.meta['vars_global'] = p.vars.get_globals()
         jscode.meta['vars_unknown'] = vars_unknown
+        
+
         return jscode
     
     if ob is None:

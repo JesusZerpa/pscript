@@ -1017,35 +1017,109 @@ class Parser2(Parser1):
         
         # Check
         if (not lambda_) and node.decorator_nodes:
+            import json
             code.append(self.lf('%s = ' % prefixed))
 
             if not (len(node.decorator_nodes) == 1 and
                     isinstance(node.decorator_nodes[0], ast.Name) and
                     node.decorator_nodes[0].name == 'staticmethod'):
                 #raise JSError('No support for function decorators')
-                
-                if type(node.decorator_nodes[0])==ast.Call:
-                    params=[]
-                    for _node in node.decorator_nodes:
-                        for param in _node.arg_nodes:
+                for decorator in node.decorator_nodes:
+                    if type(decorator)==ast.Call:
+                        params=[]
+
+                        for param in decorator.arg_nodes:
 
                             if type(param)==ast.Attribute:
-                                params.append(param.value_node.name+"."+param.attr)
-                            elif type(param)==ast.Str:
+        
+                                n=param
+                                l=[]
+                        
+                                test=""
                                 
-                                params.append("'"+param.value+"'")
-                            elif type(param)==ast.Name:
-                                params.append(param.name)
+                                while "value_node" in dir(n):
+                                    l.insert(0,n.attr)
+                                   
+                                    n=n.value_node
+                                if type(n)==ast.Name:
+                                    l.insert(0,n.name)
+                           
+                                params.append(".".join(l))
+                            else:
+                                params.append("".join(self.parse(param)))
+                        args=decorator
+                        code.append(decorator.func_node.name\
+                            +"("+",".join(params)+")("+prefixed+");")
 
-                    args=node.decorator_nodes[0]
-                    code.append(node.decorator_nodes[0].func_node.name\
-                        +"("+",".join(params)+")("+prefixed+")")
-                else:
-                    code.append(node.decorator_nodes[0].func_node.name\
-                        +"("+prefixed+")")
+                    elif type(decorator)==ast.Name:
+                        if decorator.name=="property":
+                            code.pop()
+                            node.name
+                            prefixed.split(".")
+                            decorator.name=decorator
+                            _body=[]
+                            for body in node.body_nodes:
+                                _body+=self.parse(body)
+                            property=prefixed.split(".")[-1]
+                            objeto=prefixed.split(".")[0]
+                       
+                            _code=f"""
+Object.defineProperty({objeto}, '{property}', {{
+get: function(){{ {"".join(_body)} }},
+enumerable: true,
+configurable: true}})
+"""
+                            code.append(_code)
+                        else:
+                            code.append(decorator.name+"("+prefixed+");")
+                    elif type(decorator) ==ast.FunctionDef: 
+                        
+                        node.arg_nodes
+                        node.body_nodes
+                        if type(decorator)==ast.Attribute:
+                            decorator.attr#setter
+                            
+                            decorator.value_node.name+""
+
+                        code.append(decorator.func_node.name\
+                            +"("+prefixed+");")      
+                        _code=""
+                        for child in node.body_nodes:
+                            _code+=self.parse(child)
+                         
+
+                    elif type(decorator)==ast.Attribute:
+
+                        args=[]
+                        for arg in node.arg_nodes:
+                            args.append(arg.name)
+                        if decorator.attr=="setter":
+                            property=prefixed.split(".")[-1]
+                            objeto=prefixed.split(".")[0]
+                            _body=[]
+                            for body in node.body_nodes:
+                                _body+=self.parse(body)
                     
+                            _code=f"""
+Object.defineProperty({objeto}, '{property}', {{
+set: function({",".join(args)}){{ {"".join(_body)} }},
+enumerable: true,
+configurable: true}})
+"""
+                            code.append(_code)
+                        else:
+                            
+                            code.append(_code)
+
+                    else:   
+                     
+                        code.append(decorator.func_node.name\
+                            +"("+prefixed+");")
+                        
                 
             
+            else:
+              
                 pass
 
         return pre_code + code
