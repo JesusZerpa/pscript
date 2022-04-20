@@ -316,10 +316,18 @@ class Parser1(Parser0):
         # Do we need to use the fallback?
         if use_make_dict_func:
             func_args = []
+            func_vars =[]
+       
             for key, val in zip(node.key_nodes, node.value_nodes):
-                func_args += [unify(self.parse(key)), unify(self.parse(val))]
+
+                if type(key)!=ast.NoneType:
+                    func_args += [unify(self.parse(key)), unify(self.parse(val))]
+                else:
+  
+                    func_vars.append(val.name)
+            
             self.use_std_function('create_dict', [])
-            return stdlib.FUNCTION_PREFIX + 'create_dict(' + ', '.join(func_args) + ')'
+            return stdlib.FUNCTION_PREFIX + 'create_dict([' + ', '.join(func_args) + '],['+', '.join(func_vars)+'])'
         return code
     
     def parse_Set(self, node):

@@ -141,9 +141,12 @@ FUNCTIONS['op_instantiate'] = """function (ob, args) { // nargs: 2
     }
 }"""
 
-FUNCTIONS['create_dict'] = """function () {
+FUNCTIONS['create_dict'] = """function (items,variables=[]) {
     var d = {};
-    for (var i=0; i<arguments.length; i+=2) { d[arguments[i]] = arguments[i+1]; }
+    for (var i=0; i<items.length; i+=2) { d[items[i]] =items[i+1]; }
+    for (let item of variables){
+        d=Object.assign(d,item)
+    }
     return d;
 }"""
 

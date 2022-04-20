@@ -454,4 +454,5 @@ class Parser0:
     
             return res
         else:
+            exit()
             raise JSError('Cannot parse %s-nodes yet' % nodeType)
