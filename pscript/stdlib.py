@@ -125,16 +125,24 @@ FUNCTIONS['time'] = """function () {return Date.now() / 1000;} // nargs: 0"""
 ## Hardcore functions
 
 FUNCTIONS['op_instantiate'] = """function (ob, args) { // nargs: 2
+
+
     if ((typeof ob === "undefined") ||
             (typeof window !== "undefined" && window === ob) ||
             (typeof global !== "undefined" && global === ob))
             {throw "Class constructor is called as a function.";}
     for (var name in ob) {
-        if (Object[name] === undefined &&
-            typeof ob[name] === 'function' && !ob[name].nobind) {
-            ob[name] = ob[name].bind(ob);
-            ob[name].__name__ = name;
+        try{
+            if ( Object[name] === undefined &&
+                typeof ob[name] === 'function' && !ob[name].nobind) {
+                ob[name] = ob[name].bind(ob);
+                ob[name].__name__ = name;
+            }
         }
+        catch(e){
+            //si ocurrio un error lo mas seguro es que sea por las propiedades
+        }
+        
     }
     if (ob.__init__) {
         ob.__init__.apply(ob, args);

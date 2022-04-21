@@ -843,6 +843,61 @@ class Parser2(Parser1):
         # Classes give their methods a __name__, so no need to name these.
         code = []
         func_name = ''
+        ##################################
+        # Check
+        if (not lambda_) and node.decorator_nodes:
+            import json
+    
+
+            if not (len(node.decorator_nodes) == 1 and
+                    isinstance(node.decorator_nodes[0], ast.Name) and
+                    node.decorator_nodes[0].name == 'staticmethod'):
+                #raise JSError('No support for function decorators')
+                prefixed = self.with_prefix(node.name)
+                for decorator in node.decorator_nodes:
+                    if type(decorator)==ast.Name:
+                        if decorator.name=="property":
+                            
+
+                            decorator.name=decorator
+                            _body=[]
+                            for body in node.body_nodes:
+                                _body+=self.parse(body)
+
+                            property=prefixed.split(".")[-1]
+                            objeto=prefixed.split(".")[0]
+                       
+                            _code=f"""
+Object.defineProperty({objeto}.prototype, '{property}', {{
+get: function(){{ {"".join(_body)} }},
+enumerable: true,
+configurable: true}})
+"""
+                            code.append(_code)
+                            return code
+                    elif type(decorator)==ast.Attribute:
+
+                        args=[]
+                       
+          
+                        for arg in node.arg_nodes:
+                            args.append(arg.name)
+                        if decorator.attr=="setter":
+                            property=prefixed.split(".")[-1]
+                            objeto=prefixed.split(".")[0]
+                            _body=[]
+                            for body in node.body_nodes:
+                                _body+=self.parse(body)
+                    
+                            _code=f"""
+Object.defineProperty({objeto}, '{property}', {{
+set: function({",".join(args)}){{ {"".join(_body)}({",".join(args)}) }},
+enumerable: true,
+configurable: true}})
+"""
+                            code.append(_code)
+                            return code
+        ###########################3
         if not lambda_:
             if not has_self:
                 func_name = 'flx_' + node.name
@@ -851,6 +906,7 @@ class Parser2(Parser1):
                 self.vars.add(node.name)
                 self._seen_func_names.add(node.name)
             code.append(self.lf('%s = ' % prefixed))
+        
         code.append('%s%sfunction %s%s(' % ('(' if binder else '',
                                           'async ' if asyn else '',
                                           func_name,
@@ -1053,18 +1109,19 @@ class Parser2(Parser1):
 
                     elif type(decorator)==ast.Name:
                         if decorator.name=="property":
+                            
                             code.pop()
-                            node.name
-                            prefixed.split(".")
+
                             decorator.name=decorator
                             _body=[]
                             for body in node.body_nodes:
                                 _body+=self.parse(body)
+
                             property=prefixed.split(".")[-1]
                             objeto=prefixed.split(".")[0]
                        
                             _code=f"""
-Object.defineProperty({objeto}, '{property}', {{
+Object.defineProperty({objeto}.prototype, '{property}', {{
 get: function(){{ {"".join(_body)} }},
 enumerable: true,
 configurable: true}})
@@ -1091,6 +1148,8 @@ configurable: true}})
                     elif type(decorator)==ast.Attribute:
 
                         args=[]
+                       
+                        code.pop()
                         for arg in node.arg_nodes:
                             args.append(arg.name)
                         if decorator.attr=="setter":
@@ -1102,7 +1161,7 @@ configurable: true}})
                     
                             _code=f"""
 Object.defineProperty({objeto}, '{property}', {{
-set: function({",".join(args)}){{ {"".join(_body)} }},
+set: function({",".join(args)}){{ {"".join(_body)}({",".join(args)}) }},
 enumerable: true,
 configurable: true}})
 """

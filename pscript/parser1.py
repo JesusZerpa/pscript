@@ -872,6 +872,7 @@ class Parser1(Parser0):
 
     def parse_Import(self, node):
         import os
+        _as=None
         if node.root and 'pscript' in node.root:
             # User is probably importing names from here to allow
             # writing the JS code and command to parse it in one module.
@@ -888,14 +889,24 @@ class Parser1(Parser0):
         if node.level!=0:
             path="./"+("../"*(node.level-1))+node.root.replace(".","/")
             fullpath=os.path.dirname(self._pysource[0])+"/"+ ("../"*(node.level-1))+node.root.replace(".","/")
+        elif not node.root:
+
+            _as=node.names[0][1]
+
+            path="@/"+node.names[0][0].replace(".","/")
+            fullpath=os.getcwd()+"/"+node.names[0][0].replace(".","/")
 
         else:
             path="@/"+node.root.replace(".","/")
             fullpath=os.getcwd()+"/"+node.root.replace(".","/")
         
         for item in node.names:
-            if item[0]!="*":
+            if item[0]!="*" and item[1]==None:
                 self.import_vars.append(item[0])
+            elif item[1]!=None:
+                self.import_vars.append(item[1])
+
+        
         default=False
         if os.path.isdir(fullpath) and os.path.exists(fullpath+"/__init__.py"):
             path+="/__init__.py"
@@ -910,17 +921,19 @@ class Parser1(Parser0):
                 path+="/"+self.import_vars[0]+".js"
           
 
-            
-        if not default:
+        if _as:
+            code=["\nimport * as "+_as+" from '"+path+"'","\n"]    
+        elif not default:
             if "*" in ",".join([item[0] for item in node.names]):
                 code=["\n","import  '"+path+"'","\n"]
             else:  
                 code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path+"'","\n"]
+        
         else:
 
             code=["\nimport * as "+node.names[0][0]+" from '"+path+"'","\n"]
       
-        
+
         return code
         #raise JSError('PScript does not support imports.')
     
