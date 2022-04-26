@@ -890,7 +890,7 @@ configurable: true}})
                                 _body+=self.parse(body)
                     
                             _code=f"""
-Object.defineProperty({objeto}, '{property}', {{
+Object.defineProperty({objeto}.prototype, '{property}', {{
 set: function({",".join(args)}){{ {"".join(_body)}({",".join(args)}) }},
 enumerable: true,
 configurable: true}})
@@ -1099,35 +1099,17 @@ configurable: true}})
                                     n=n.value_node
                                 if type(n)==ast.Name:
                                     l.insert(0,n.name)
-                           
-                                params.append(".".join(l))
+
+                                params.append(".".join(l).replace("self.","this."))
                             else:
                                 params.append("".join(self.parse(param)))
                         args=decorator
+
                         code.append(decorator.func_node.name\
                             +"("+",".join(params)+")("+prefixed+");")
 
                     elif type(decorator)==ast.Name:
-                        if decorator.name=="property":
-                            
-                            code.pop()
 
-                            decorator.name=decorator
-                            _body=[]
-                            for body in node.body_nodes:
-                                _body+=self.parse(body)
-
-                            property=prefixed.split(".")[-1]
-                            objeto=prefixed.split(".")[0]
-                       
-                            _code=f"""
-Object.defineProperty({objeto}.prototype, '{property}', {{
-get: function(){{ {"".join(_body)} }},
-enumerable: true,
-configurable: true}})
-"""
-                            code.append(_code)
-                        else:
                             code.append(decorator.name+"("+prefixed+");")
                     elif type(decorator) ==ast.FunctionDef: 
                         
@@ -1152,23 +1134,9 @@ configurable: true}})
                         code.pop()
                         for arg in node.arg_nodes:
                             args.append(arg.name)
-                        if decorator.attr=="setter":
-                            property=prefixed.split(".")[-1]
-                            objeto=prefixed.split(".")[0]
-                            _body=[]
-                            for body in node.body_nodes:
-                                _body+=self.parse(body)
-                    
-                            _code=f"""
-Object.defineProperty({objeto}, '{property}', {{
-set: function({",".join(args)}){{ {"".join(_body)}({",".join(args)}) }},
-enumerable: true,
-configurable: true}})
-"""
-                            code.append(_code)
-                        else:
+
                             
-                            code.append(_code)
+                        code.append(_code)
 
                     else:   
                      
