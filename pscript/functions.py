@@ -138,9 +138,7 @@ def py2js(ob=None, new_name=None, **parser_options):
          'class Hola: pass'
 
         """
-        
-        
-
+        #variable=require("slasgasgas").module
         jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
             r"import { \g<module> as \g<variable> } from '\g<path>'/*aqui*/",
             jscode)
@@ -150,14 +148,14 @@ def py2js(ob=None, new_name=None, **parser_options):
         
         
         
-        param=r"[@|\w|\d|\.|\'|,|\[|\]|\{|\}|:|\"|/|+|_|\s]+"
+        param=r"[@|\w|\d|\.|\'|,|\[|\]|\{|\}|:|\"|/|+|_|-|\s]+"
         
-        
-
+        #variable=new require("sasgashlgas").module(params)
         jscode=re.sub(rf"(?P<variable>[\w|,|\.|\s]+)\s+?=\s+?new \(require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
             r"\nimport { \g<module> } from '\g<path>';\g<variable> = \g<module>(\g<params>)",
             jscode)
 
+        #variable=require("")
         jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
             r"\nimport  * as \g<variable>  from '\g<path>'",
             jscode)
@@ -167,8 +165,13 @@ def py2js(ob=None, new_name=None, **parser_options):
         jscode=re.sub(rf"os.environ\[[\"|'](?P<variable>\w+)[\"|']\]",
             r"import.meta.env.\g<variable>",
             jscode)
+        #require("sashgsdhgsdgsdg").module(param)
         jscode=re.sub(rf"\(require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\).(?P<module>\w+)\)\((?P<params>{param})\)",
             r"\nimport { \g<module> } from '\g<path>';\g<module>(\g<params>)",
+            jscode)
+
+        jscode=re.sub(rf"require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
+            r"\nimport '\g<path>';",
             jscode)
         
         _jsevent="""
@@ -181,6 +184,12 @@ def py2js(ob=None, new_name=None, **parser_options):
                 return function(fn){
                     
                     listener(params,fn)
+                }
+            }
+            function jsmethod(listener){
+                return function(fn){
+                    console.log("uuuuuuu",listener,fn.name,listener[fn.name.slice("bound flx_".length)])
+                    listener[fn.name.slice("bound flx_".length)](fn)
                 }
             }
             function __new__(obj){
@@ -206,7 +215,7 @@ def py2js(ob=None, new_name=None, **parser_options):
             }
 
             function jsbind(obj,attr){
-                console.log("qqqqqq",obj,attr)
+
                 return function(fn){
                     if (fn.name.indexOf("flx_")==0){
                         
