@@ -1075,7 +1075,7 @@ configurable: true}})
         if (not lambda_) and node.decorator_nodes:
             import json
             code.append(self.lf('%s = ' % prefixed))
-
+           
             if not (len(node.decorator_nodes) == 1 and
                     isinstance(node.decorator_nodes[0], ast.Name) and
                     node.decorator_nodes[0].name == 'staticmethod'):
@@ -1092,17 +1092,38 @@ configurable: true}})
                                 l=[]
                         
                                 test=""
-                                
+
                                 while "value_node" in dir(n):
-                                    l.insert(0,n.attr)
+
+                                    if (type(n)==ast.Subscript):
+                                       
+                                        l.insert(0,n.slice_node.value)
+                                   
+                                    else:
+                                        l.insert(0,n.attr)
                                    
                                     n=n.value_node
                                 if type(n)==ast.Name:
                                     l.insert(0,n.name)
+                                join=""
+                                for k,elem in enumerate(l):
+                                    if k<len(l)-1:
+                                        if elem.isdigit():
+                                            join+="["+elem+"]."
+                                        else:
+                                            join+=elem+"."
+                                    else:
+                                        if elem.isdigit():
+                                            join+="["+elem+"]"
+                                        else:
+                                            join+=elem
 
-                                params.append(".".join(l).replace("self.","this."))
+
+                                params.append(join.replace("self.","this."))
                             else:
                                 params.append("".join(self.parse(param)))
+                    
+
                         args=decorator
 
                         code.append(decorator.func_node.name\

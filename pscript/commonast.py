@@ -1036,8 +1036,10 @@ class NativeAstConverter:
         return AugAssign(self._convert(n.target), op, self._convert(n.value))
 
     def _convert_AnnAssign(self, n):
+
         if n.value is None:
-            raise RuntimeError("Cannot convert AnnAssign nodes with no assignment!")
+            print("eeeeeeeeeeeee",n)
+            raise RuntimeError("Cannot convert AnnAssign nodes with no assignment!"+str(n.target.id))
         c = self._convert
         return Assign([c(n.target)], c(n.value))
     

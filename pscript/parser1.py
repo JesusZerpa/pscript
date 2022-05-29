@@ -886,19 +886,22 @@ class Parser1(Parser0):
             # User is probably importing type annotations. Ignore this import.
             return []
         
-        if node.level!=0:
+        if node.level!=0 and node.root:
+
             path="./"+("../"*(node.level-1))+node.root.replace(".","/")
             fullpath=os.path.dirname(self._pysource[0])+"/"+ ("../"*(node.level-1))+node.root.replace(".","/")
         elif not node.root:
-
+            
+  
             _as=node.names[0][1]
-
             path="@/"+node.names[0][0].replace(".","/")
-            fullpath=os.getcwd()+"/"+node.names[0][0].replace(".","/")
+            fullpath=os.path.dirname(self._pysource[0])+"/"+node.names[0][0].replace(".","/")
 
         else:
+            fullpath=os.path.dirname(self._pysource[0])+"/"+node.root.replace(".","/")
+
             path="@/"+node.root.replace(".","/")
-            fullpath=os.getcwd()+"/"+node.root.replace(".","/")
+            
         
         for item in node.names:
             if item[0]!="*" and item[1]==None:
@@ -908,6 +911,8 @@ class Parser1(Parser0):
 
         
         default=False
+        notexists=False
+  
         if os.path.isdir(fullpath) and os.path.exists(fullpath+"/__init__.py"):
             path+="/__init__.py"
         elif os.path.exists(fullpath+".py"):
@@ -919,16 +924,30 @@ class Parser1(Parser0):
             if os.path.exists(fullpath+"/"+self.import_vars[0]+".js"):
                 default=True
                 path+="/"+self.import_vars[0]+".js"
-          
-
+        else:
+            notexists=True
+ 
+        
         if _as:
-            code=["\nimport * as "+_as+" from '"+path+"'","\n"]    
+            code=["\nimport * as "+_as+" from '"+path+"'","\n"] 
+        elif notexists:
+            if node.root:
+                code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path.replace("@/","")+"'","\n"]
+            else:
+
+                code=["\n","import * as "+node.names[0][0]+" from '"+path.replace("@/","")+"'","\n"]
+
         elif not default:
+        
             if "*" in ",".join([item[0] for item in node.names]):
                 code=["\n","import  '"+path+"'","\n"]
             else:  
-                code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path+"'","\n"]
-        
+                if node.root:
+                    code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path+"'","\n"]
+                   
+                else:
+                    code=["\n","import * as "+node.names[0][0]+" from '"+path+"'","\n" ]
+                
         else:
 
             code=["\nimport * as "+node.names[0][0]+" from '"+path+"'","\n"]

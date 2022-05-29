@@ -140,7 +140,7 @@ def py2js(ob=None, new_name=None, **parser_options):
         """
         #variable=require("slasgasgas").module
         jscode=re.sub(r"(?P<variable>\w+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)\.(?P<module>\w+)",
-            r"import { \g<module> as \g<variable> } from '\g<path>'/*aqui*/",
+            r"import { \g<module> as \g<variable> } from '\g<path>'",
             jscode)
 
         
@@ -156,8 +156,11 @@ def py2js(ob=None, new_name=None, **parser_options):
             jscode)
 
         #variable=require("")
-        jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
+        jscode=re.sub(r"(?P<variable>[\w|\s]+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
             r"\nimport  * as \g<variable>  from '\g<path>'",
+            jscode)
+        jscode=re.sub(r"(?P<variable>[\w|,|\s]+)\s+?=\s+?require\(\"(?P<path>[@|\w|\d|\.|\-|\/]+)\"\)",
+            r"\nimport  {\g<variable>}  from '\g<path>'",
             jscode)
 
 
