@@ -203,7 +203,8 @@ def py2js(ob=None, new_name=None, **parser_options):
                 return function(fn){
                 
                 if (fn.name.indexOf("bound flx_")==0){
-                               listener(fn.name.slice("bound flx_".length),fn,params)
+                
+                    listener(fn.name.slice("bound flx_".length),fn,params)
                 }
                 else if (fn.name.indexOf("flx_")==0){
 

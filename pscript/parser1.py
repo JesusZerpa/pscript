@@ -348,8 +348,9 @@ class Parser1(Parser0):
     def parse_Name(self, node, fullname=None):
         # node.ctx can be Load, Store, Del -> can be of use somewhere?
         name = node.name
-        if name in reserved_names and name!="typeof":
-            raise JSError('Cannot use reserved name %s as a variable name!' % name)
+        if name in reserved_names and name!="typeof" and name!="extends":#esto verificarlo solo util en vue
+            
+            raise JSError(('Cannot use reserved name %s as a variable name!'% name)+str(reserved_names) )
 
         self.last_var=node.name
         if self.vars.is_known(name):
@@ -926,16 +927,20 @@ class Parser1(Parser0):
                 path+="/"+self.import_vars[0]+".js"
         else:
             notexists=True
+
  
         
         if _as:
             code=["\nimport * as "+_as+" from '"+path+"'","\n"] 
+           
+
         elif notexists:
             if node.root:
                 code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path.replace("@/","")+"'","\n"]
             else:
 
                 code=["\n","import * as "+node.names[0][0]+" from '"+path.replace("@/","")+"'","\n"]
+
 
         elif not default:
         
@@ -944,14 +949,14 @@ class Parser1(Parser0):
             else:  
                 if node.root:
                     code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path+"'","\n"]
-                   
+
                 else:
                     code=["\n","import * as "+node.names[0][0]+" from '"+path+"'","\n" ]
+
                 
         else:
 
             code=["\nimport * as "+node.names[0][0]+" from '"+path+"'","\n"]
-      
 
         return code
         #raise JSError('PScript does not support imports.')

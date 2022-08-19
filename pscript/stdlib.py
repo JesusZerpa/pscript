@@ -228,7 +228,10 @@ FUNCTIONS['dict'] = """function (x) {
 
 FUNCTIONS['list'] = """function (x) {
     var r=[];
-    if (typeof x==="object" && !Array.isArray(x)) {x = Object.keys(x)}
+    if (typeof x==="object" && !Array.isArray(x)  && (!["NodeList","FileList"].includes(x.constructor.name)) ) {x = Object.keys(x)}
+    else{
+    x = Object.values(x);
+    }
     for (var i=0; i<x.length; i++) {
         r.push(x[i]);
     }

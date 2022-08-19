@@ -643,13 +643,13 @@ class Parser2(Parser1):
         lf = self.lf
         if not newlines:  # pragma: no cover
             lf = lambda x: x
-        
+        #CORREGIR ESTO PARA EL FOR OF 
         if name1 != name2:
             code.append(lf('%s = %s;' % (name2, name1)))
         code.append(lf('if ((typeof %s === "object") && '
-                       '(!Array.isArray(%s))) {' % (name2, name2)))
+                       '(!Array.isArray(%s)) && (!["NodeList","FileList"].includes(%s.constructor.name)) ) {' % (name2,name2,name2)))
         code.append(' %s = Object.keys(%s);' % (name2, name2))
-        code.append('}')
+        code.append('} \nelse{ %s = Object.values(%s);}' % (name2,name2))
         return ''.join(code)
     
     def parse_While(self, node):
