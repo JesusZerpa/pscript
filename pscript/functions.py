@@ -103,6 +103,7 @@ def py2js(ob=None, new_name=None, **parser_options):
                              'classes and functions.')
         if "filename" in parser_options:
             filename=parser_options.pop("filename")
+        
 
         # Get hash, in case we ever want to cache JS accross sessions
         h = hashlib.sha256('pscript version 1'.encode())

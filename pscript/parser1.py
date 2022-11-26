@@ -208,7 +208,7 @@ reserved_names = (
     'abstract', 'instanceof', 'boolean', 'enum', 'switch', 'export',
     'interface', 'synchronized', 'extends', 'let', 'case', 'throw',
     'catch', 'final', 'native', 'throws', 'new', 'transient',
-    'const', 'package', 'function', 'private', 'typeof', 'debugger', 'goto',
+    'package', 'function', 'private', 'typeof', 'debugger', 'goto',
     'protected', 'var', 'default', 'public', 'void', 'delete', 'implements',
     'volatile', 'do', 'static',
     # Commented, because are disallowed in Python too.
@@ -748,6 +748,7 @@ class Parser1(Parser0):
         
         # Parse targets
         tuple = []
+        is_const=False
  
         for target in node.target_nodes:
 
@@ -761,7 +762,20 @@ class Parser1(Parser0):
             elif isinstance(target, ast.Attribute):
                 code.append(var)
             elif isinstance(target, ast.Subscript):
-                code.append(var)
+         
+               
+                if "name" in dir(target.value_node) and target.value_node.name=="const":
+                    target.slice_node
+                    code.append("const ")
+                    is_const=True
+
+                    code.append(target.slice_node.name)
+                    del self.vars[target.slice_node.name]
+                    self.import_vars.append(target.slice_node.name)
+                    #code.append()
+                else:
+                    code.append(var)
+                
             elif isinstance(target, (ast.Tuple, ast.List)):
                 dummy = self.dummy()
                 code.append(dummy)
@@ -780,6 +794,7 @@ class Parser1(Parser0):
             code = [self.lf(), result_name + ' = [];'] + lc_code + code
         else:
             code += self.parse(node.value_node)
+
             code.append(';')
         
         # Handle tuple unpacking
@@ -895,13 +910,26 @@ class Parser1(Parser0):
             
   
             _as=node.names[0][1]
-            path="@/"+node.names[0][0].replace(".","/")
+            if os.path.exists(self.dir_project+"/node_modules/"+node.names[0][0].replace(".","/")+".py"):
+                path=node.names[0][0].replace(".","/")
+            else:
+                path="@/"+node.names[0][0].replace(".","/")
             fullpath=os.path.dirname(self._pysource[0])+"/"+node.names[0][0].replace(".","/")
 
         else:
-            fullpath=os.path.dirname(self._pysource[0])+"/"+node.root.replace(".","/")
 
-            path="@/"+node.root.replace(".","/")
+            fullpath=os.path.dirname(self._pysource[0])+"/"+node.root.replace(".","/")
+            #aca no se si es global o es una libreria asi que
+            #aun se debe buscar una manera de identificarlo
+            """
+            if node.root in libraries:
+                path=node.root.replace(".","/")
+            else: 
+            """
+            if os.path.exists(self.dir_project+"/node_modules/"+node.root.replace(".","/")+".py"):
+                path=node.root.replace(".","/")
+            else:
+                path="@/"+node.root.replace(".","/")
             
         
         for item in node.names:
@@ -936,7 +964,12 @@ class Parser1(Parser0):
 
         elif notexists:
             if node.root:
-                code=["\n","import {"+",".join([item[0] for item in node.names])+"} from '"+path.replace("@/","")+"'","\n"]
+                if os.path.exists(fullpath+".py"):
+                    path+=".py"
+                elif os.path.exists(self.dir_project+"/node_modules/"+path+".py"):
+                    path+=".py"
+                #path.replace("@/","")
+                code=["\n","import {"+",".join([item[0]+((" as "+item[1]) if item[1] else "") for item in node.names])+"} from '"+path.replace("@/","")+"'","\n"]
             else:
 
                 code=["\n","import * as "+node.names[0][0]+" from '"+path.replace("@/","")+"'","\n"]

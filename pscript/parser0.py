@@ -199,7 +199,7 @@ class Parser0:
     }
     
     def __init__(self, code, pysource=None, indent=0, docstrings=True,
-                 inline_stdlib=True):
+                 inline_stdlib=True,dir_project=None):
         self._pycode = code  # helpfull during debugging
         self._pysource = None
         self.import_vars=[]
@@ -217,6 +217,7 @@ class Parser0:
             self._root.body_nodes.pop(0)  # remove that import node we added
         self._stack = []
         self._indent = indent
+        self.dir_project=dir_project
         self._dummy_counter = 0
         self._scope_prefix = []  # stack of name prefixes to simulate local scope
         
@@ -284,8 +285,10 @@ class Parser0:
     def dump(self):
         """ Get the JS code as a string.
         """
-        return ''.join(self._parts)
-    
+        try:
+            return ''.join(self._parts)
+        except :
+            raise Exception(self._parts)
     def _better_js_error(self, tb):  # pragma: no cover
         """ If we get a JSError, we try to get the corresponding node
         and print the lineno as well as the function etc.
