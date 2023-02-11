@@ -56,6 +56,8 @@ def py2js(ob=None, new_name=None, **parser_options):
         contrast to functions).
     
     """
+    with open("ERROR6.txt","a") as f:
+        f.write(str([parser_options]))
     
     def py2js_(ob):
 
@@ -103,19 +105,22 @@ def py2js(ob=None, new_name=None, **parser_options):
                              'classes and functions.')
         if "filename" in parser_options:
             filename=parser_options.pop("filename")
-        
+
 
         # Get hash, in case we ever want to cache JS accross sessions
         h = hashlib.sha256('pscript version 1'.encode())
         h.update(pycode.encode())
         hash = h.digest()
-   
+
         # Get JS code
         if filename:
 
             p = Parser(pycode, (filename, linenr), **parser_options)
+            
         else:
             p = Parser(pycode, **parser_options)
+         
+        
         jscode = p.dump()
         if new_name:
             if thetype not in ('class', 'def'):

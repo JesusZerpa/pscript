@@ -901,7 +901,12 @@ class Parser1(Parser0):
         if node.root == 'typing':
             # User is probably importing type annotations. Ignore this import.
             return []
-        
+        if node.root:
+
+            path="@/"+node.root.replace(".","/")
+        else:
+            path="@/"
+
         if node.level!=0 and node.root:
 
             path="./"+("../"*(node.level-1))+node.root.replace(".","/")
@@ -910,10 +915,14 @@ class Parser1(Parser0):
             
   
             _as=node.names[0][1]
-            if os.path.exists(self.dir_project+"/node_modules/"+node.names[0][0].replace(".","/")+".py"):
-                path=node.names[0][0].replace(".","/")
-            else:
-                path="@/"+node.names[0][0].replace(".","/")
+            try:
+                if node.names[0][0] and os.path.exists(self.dir_project+"/node_modules/"+node.names[0][0].replace(".","/")+".py"):
+                    path=node.names[0][0].replace(".","/")
+                else:
+                    path="@/"+node.names[0][0].replace(".","/")
+            except Exception as e:
+                with open("ERROR.txt","w") as f:
+                    f.write(str([self.dir_project,node.names[0][0],self._pysource[0]]))
             fullpath=os.path.dirname(self._pysource[0])+"/"+node.names[0][0].replace(".","/")
 
         else:
@@ -955,6 +964,8 @@ class Parser1(Parser0):
                 path+="/"+self.import_vars[0]+".js"
         else:
             notexists=True
+
+
 
  
         

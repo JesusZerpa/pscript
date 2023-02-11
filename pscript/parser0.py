@@ -203,6 +203,8 @@ class Parser0:
         self._pycode = code  # helpfull during debugging
         self._pysource = None
         self.import_vars=[]
+        with open("ERROR7.txt","a") as f:
+            f.write(str([pysource,dir_project])+"\n")
         if isinstance(pysource, str):
             self._pysource = pysource, 0
         elif isinstance(pysource, tuple):
@@ -217,6 +219,7 @@ class Parser0:
             self._root.body_nodes.pop(0)  # remove that import node we added
         self._stack = []
         self._indent = indent
+     
         self.dir_project=dir_project
         self._dummy_counter = 0
         self._scope_prefix = []  # stack of name prefixes to simulate local scope
