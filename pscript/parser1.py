@@ -322,10 +322,12 @@ class Parser1(Parser0):
 
                 if type(key)!=ast.NoneType:
                     func_args += [unify(self.parse(key)), unify(self.parse(val))]
+                elif isinstance(val,ast.Attribute):
+                    func_vars.append(val.attr+"."+val.value_node.name)
                 else:
-  
+           
                     func_vars.append(val.name)
-            
+                 
             self.use_std_function('create_dict', [])
             return stdlib.FUNCTION_PREFIX + 'create_dict([' + ', '.join(func_args) + '],['+', '.join(func_vars)+'])'
         return code
@@ -915,14 +917,12 @@ class Parser1(Parser0):
             
   
             _as=node.names[0][1]
-            try:
-                if node.names[0][0] and os.path.exists(self.dir_project+"/node_modules/"+node.names[0][0].replace(".","/")+".py"):
-                    path=node.names[0][0].replace(".","/")
-                else:
-                    path="@/"+node.names[0][0].replace(".","/")
-            except Exception as e:
-                with open("ERROR.txt","w") as f:
-                    f.write(str([self.dir_project,node.names[0][0],self._pysource[0]]))
+            
+            if node.names[0][0] and os.path.exists(self.dir_project+"/node_modules/"+node.names[0][0].replace(".","/")+".py"):
+                path=node.names[0][0].replace(".","/")
+            else:
+                path="@/"+node.names[0][0].replace(".","/")
+        
             fullpath=os.path.dirname(self._pysource[0])+"/"+node.names[0][0].replace(".","/")
 
         else:
