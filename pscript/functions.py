@@ -56,8 +56,6 @@ def py2js(ob=None, new_name=None, **parser_options):
         contrast to functions).
     
     """
-    with open("ERROR6.txt","a") as f:
-        f.write(str([parser_options]))
     
     def py2js_(ob):
 
@@ -258,8 +256,10 @@ def py2js(ob=None, new_name=None, **parser_options):
             """
 
         jscode=_jsevent+jscode.replace("jsimport(","import(")
-        jscode+="\nexport {"+", ".join(p.vars.get_defined().union(set(p.import_vars)))+" }"
-
+        if "default" in p.vars:
+            jscode+="\nexport{ flx_default as default}"
+        else:
+            jscode+="\nexport {"+", ".join(p.vars.get_defined().union(set(p.import_vars)))+" }"
         jscode = JSString(jscode)
         jscode.meta = {}
         jscode.meta['filename'] = filename

@@ -352,7 +352,10 @@ class Parser0:
             if value == 1 and name not in self.remove_declarations:
                 loose_vars.append(name)
             # else: pass global/nonlocal or expected to be defined in outer scope
+        if "default" in loose_vars:
+            loose_vars.remove("default")
         if loose_vars:
+
             code.insert(0, self.lf('var %s;' % ', '.join(loose_vars)))
         
 

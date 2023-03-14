@@ -905,7 +905,8 @@ configurable: true}})
             if prefixed == node.name:  # normal function vs method
                 self.vars.add(node.name)
                 self._seen_func_names.add(node.name)
-            code.append(self.lf('%s = ' % prefixed))
+            if prefixed!="default":
+                code.append(self.lf('%s = ' % prefixed))
         
         code.append('%s%sfunction %s%s(' % ('(' if binder else '',
                                           'async ' if asyn else '',
