@@ -258,6 +258,9 @@ def py2js(ob=None, new_name=None, **parser_options):
         jscode=_jsevent+jscode.replace("jsimport(","import(")
         if "default" in p.vars:
             jscode+="\nexport{ flx_default as default}"
+        elif "export_default" in p.vars:
+            jscode+="\nexport{ export_default as default}"
+
         else:
             jscode+="\nexport {"+", ".join(p.vars.get_defined().union(set(p.import_vars)))+" }"
         jscode = JSString(jscode)
