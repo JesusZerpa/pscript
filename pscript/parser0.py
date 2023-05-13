@@ -203,6 +203,7 @@ class Parser0:
         self._pycode = code  # helpfull during debugging
         self._pysource = None
         self.import_vars=[]
+        self.ignore_vars=set()
         with open("ERROR7.txt","a") as f:
             f.write(str([pysource,dir_project])+"\n")
         if isinstance(pysource, str):
@@ -214,7 +215,7 @@ class Parser0:
         if sys.version_info[0] == 2:
             fut = 'from __future__ import unicode_literals, print_function\n'
             code = fut + code
-        self._root = ast.parse(code)
+        self._root = ast.parse(code,comments=True)
         if sys.version_info[0] == 2:
             self._root.body_nodes.pop(0)  # remove that import node we added
         self._stack = []

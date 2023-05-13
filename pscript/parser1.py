@@ -234,7 +234,12 @@ class Parser1(Parser0):
 
     
     ## Literals
-    
+    def parse_Comment(self,node):
+        if node.value.startswith("!"):
+            command,args=node.value[1:].split(" ")
+            if command=="ignore":
+                self.ignore_vars.union(set(args.split(",")))
+        return ""
     def parse_Num(self, node):
         return repr(node.value)
     
