@@ -243,6 +243,40 @@ class FormattedValue(Node):
     """
     __slots__ = 'value_node', 'conversion', 'format_node'
 
+class Match(Node):
+    """ An f-string, comprising a series of FormattedValue and Str nodes.
+    
+    Attributes:
+        value_nodes: list of Str and FormattedValue nodes.
+    """
+    __slots__ = 'subject', "cases"
+
+class match_case(Node):
+    """ An f-string, comprising a series of FormattedValue and Str nodes.
+    
+    Attributes:
+        value_nodes: list of Str and FormattedValue nodes.
+    """
+    __slots__ = 'pattern',"body"
+
+
+class MatchValue(Node):
+    """ An f-string, comprising a series of FormattedValue and Str nodes.
+    
+    Attributes:
+        value_nodes: list of Str and FormattedValue nodes.
+    """
+    __slots__ = 'value', 
+
+class MatchAs(Node):
+    """ An f-string, comprising a series of FormattedValue and Str nodes.
+    
+    Attributes:
+        value_nodes: list of Str and FormattedValue nodes.
+    """
+    __slots__ = [] 
+
+
 class JoinedStr(Node):
     """ An f-string, comprising a series of FormattedValue and Str nodes.
     
@@ -809,6 +843,7 @@ class NativeAstConverter:
         # Get converter function
         type = n.__class__.__name__
         try:
+
             converter = getattr(self, '_convert_' + type)
         except AttributeError:  # pragma: no cover
             raise RuntimeError('Cannot convert %s nodes.' % type)
@@ -871,6 +906,19 @@ class NativeAstConverter:
     def _convert_JoinedStr(self, n):
         c = self._convert
         return JoinedStr([c(x) for x in n.values])
+
+    def _convert_Match(self, n):
+        c = self._convert
+        return Match(c(n.subject),[c(x) for x in n.cases])
+
+    def _convert_match_case(self,n):
+        c = self._convert
+
+        return match_case(c(n.pattern),[c(x) for x in n.body])
+    def _convert_MatchValue(self, n):
+        c = self._convert
+
+        return MatchValue(c(n.value))
     
     def _convert_FormattedValue(self, n):
         conversion = '' if n.conversion < 0 else chr(n.conversion)
@@ -1038,7 +1086,6 @@ class NativeAstConverter:
     def _convert_AnnAssign(self, n):
 
         if n.value is None:
-            print("eeeeeeeeeeeee",n)
             raise RuntimeError("Cannot convert AnnAssign nodes with no assignment!"+str(n.target.id))
         c = self._convert
         return Assign([c(n.target)], c(n.value))

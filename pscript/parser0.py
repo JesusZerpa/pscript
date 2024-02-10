@@ -48,7 +48,8 @@ def unify(x):
     elif re.match(r'^\{.*\}$', x, re.UNICODE) and x.count('}') == 1:
         return x  # dicts
     else:
-        return '(%s)' % x
+        #return '(%s)' % x #da problemas en la concatenacion de string de mas de dos valores queda un ) suelto
+        return '%s' % x
 
 
 class NameSpace(dict):

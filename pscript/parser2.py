@@ -430,8 +430,29 @@ class Parser2(Parser1):
     
     # def parse_Withitem(self, node) -> handled in parse_With
     
-    ## Control flow
     
+    ## Control flow
+    def parse_Match(self, node):
+        # in "a if b else c"
+        code =["switch", "(",*self.parse(node.subject),")","{"]
+        for case in node.cases:
+            code+=["\n"]+self.parse(case)
+        code+="}"
+        return code
+    def parse_match_case(self, node):
+        from pscript.commonast import MatchAs
+        code=[]
+        for nodo in node.body:
+            code+=self.parse(nodo)+["\n"]
+        if isinstance(node.pattern,MatchAs):
+            return ["default ",":",*code,"break;"]
+        else:
+            return ["case ",*self.parse(node.pattern),":",*code,"break;"]
+
+    def parse_MatchValue(self, node):
+        # in "a if b else c"
+        return self.parse(node.value)
+        
     def parse_IfExp(self, node):
         # in "a if b else c"
         a = self.parse(node.body_node)
@@ -639,17 +660,22 @@ class Parser2(Parser1):
         return code
     
     def _make_iterable(self, name1, name2, newlines=True):
+        import re
         code = []
         lf = self.lf
         if not newlines:  # pragma: no cover
             lf = lambda x: x
         #CORREGIR ESTO PARA EL FOR OF 
+        code2='(%s && typeof %s === "object") &&  (!Array.isArray(%s)) && (!["NodeList","FileList","HTMLCollection","NodeList"].includes(%s.constructor.name)) \n'% (name2,name2,name2,name2)
         if name1 != name2:
             code.append(lf('%s = %s;' % (name2, name1)))
-        code.append(lf('if ((typeof %s === "object") && '
-                       '(!Array.isArray(%s)) && (!["NodeList","FileList"].includes(%s.constructor.name)) ) {' % (name2,name2,name2)))
+        if re.findall(r"^\w+$",name1.strip()):
+            name3=name1
+        else:
+            name3=name2
+        code.append(lf(f'if ({code2} )'+' {'))
         code.append(' %s = Object.keys(%s);' % (name2, name2))
-        code.append('} \nelse{ %s = Object.values(%s);}' % (name2,name2))
+        code.append('} else if(%s==null || %s==undefined){  throw  Error(" \'%s\' no es iterable, esta nulo o indefinido") } \nelse{ %s = Object.values(%s);}' % (name2,name2,name3,name2,name2))
         return ''.join(code)
     
     def parse_While(self, node):

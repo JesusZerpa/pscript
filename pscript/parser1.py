@@ -416,7 +416,11 @@ class Parser1(Parser0):
                         node.left_node.op == node.OPS.Add and "op_add" not in left) or
                     (isinstance(node.right_node, ast.BinOp) and
                         node.right_node.op == node.OPS.Add and "op_add" not in right)):
+                
+
                 return self.use_std_function('op_add', [left, right])
+        
+
         elif node.op == node.OPS.Mult:
             C = ast.Num
             if self._pscript_overload and not (
@@ -429,8 +433,8 @@ class Parser1(Parser0):
             return ["Math.floor(", left, "/", right, ")"]
         
         op = ' %s ' % self.BINARY_OP[node.op]
-
-        return [left, op, right]
+        
+        return [left, op, right,]
     
     def _format_string(self, node):
         # Get value_nodes
@@ -846,7 +850,7 @@ class Parser1(Parser0):
             code += self.parse(target)
             code.append(';')
         return code
-    
+
     def parse_Pass(self, node):
         return []
 
@@ -910,7 +914,8 @@ class Parser1(Parser0):
             return []
         if node.root:
 
-            path="@/"+node.root.replace(".","/")
+            #path="@/"+node.root.replace(".","/")
+            path=node.root.replace(".","/")
         else:
             path="@/"
 
@@ -931,20 +936,23 @@ class Parser1(Parser0):
             fullpath=os.path.dirname(self._pysource[0])+"/"+node.names[0][0].replace(".","/")
 
         else:
-
-            fullpath=os.path.dirname(self._pysource[0])+"/"+node.root.replace(".","/")
-            #aca no se si es global o es una libreria asi que
-            #aun se debe buscar una manera de identificarlo
-            """
-            if node.root in libraries:
-                path=node.root.replace(".","/")
-            else: 
-            """
-            if os.path.exists(self.dir_project+"/node_modules/"+node.root.replace(".","/")+".py"):
-                path=node.root.replace(".","/")
-            else:
-                path="@/"+node.root.replace(".","/")
             
+
+            if self._pysource:
+                fullpath=os.path.dirname(self._pysource[0])+"/"+node.root.replace(".","/")
+
+                #aca no se si es global o es una libreria asi que
+                #aun se debe buscar una manera de identificarlo
+                """
+                if node.root in libraries:
+                    path=node.root.replace(".","/")
+                else: 
+                """
+                if os.path.exists(self.dir_project+"/node_modules/"+node.root.replace(".","/")+".py"):
+                    path=node.root.replace(".","/")
+                else:
+                    path="@/"+node.root.replace(".","/")
+                
         
         for item in node.names:
             if item[0]!="*" and item[1]==None:
@@ -955,20 +963,20 @@ class Parser1(Parser0):
         
         default=False
         notexists=False
-  
-        if os.path.isdir(fullpath) and os.path.exists(fullpath+"/__init__.py"):
-            path+="/__init__.py"
-        elif os.path.exists(fullpath+".py"):
-            path+=".py" 
-        elif os.path.exists(fullpath+".js"):
-            path+=".js"
-        elif os.path.isdir(fullpath) and self.import_vars:
+        if self._pysource: 
+            if os.path.isdir(fullpath) and os.path.exists(fullpath+"/__init__.py"):
+                path+="/__init__.py"
+            elif os.path.exists(fullpath+".py"):
+                path+=".py" 
+            elif os.path.exists(fullpath+".js"):
+                path+=".js"
+            elif os.path.isdir(fullpath) and self.import_vars:
 
-            if os.path.exists(fullpath+"/"+self.import_vars[0]+".js"):
-                default=True
-                path+="/"+self.import_vars[0]+".js"
-        else:
-            notexists=True
+                if os.path.exists(fullpath+"/"+self.import_vars[0]+".js"):
+                    default=True
+                    path+="/"+self.import_vars[0]+".js"
+            else:
+                notexists=True
 
 
 

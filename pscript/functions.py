@@ -280,6 +280,7 @@ def py2js(ob=None, new_name=None, **parser_options):
     
     if ob is None:
         return py2js_  # uses as a decorator with some options set
+    
     return py2js_(ob)
 
 
