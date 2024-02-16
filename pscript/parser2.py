@@ -673,9 +673,10 @@ class Parser2(Parser1):
             name3=name1
         else:
             name3=name2
+        
         code.append(lf(f'if ({code2} )'+' {'))
         code.append(' %s = Object.keys(%s);' % (name2, name2))
-        code.append('} else if(%s==null || %s==undefined){  throw  Error(" \'%s\' no es iterable, esta nulo o indefinido") } \nelse{ %s = Object.values(%s);}' % (name2,name2,name3,name2,name2))
+        code.append('} else if( %s==undefined){  throw  Error(" \'%s\' no es iterable, esta nulo o indefinido") } \nelse{ %s = Object.values(%s);}' % (name2,name3,name2,name2))
         return ''.join(code)
     
     def parse_While(self, node):
